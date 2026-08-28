@@ -4,18 +4,19 @@ The Localaze runtime for Kotlin and Android. `LZ-57`.
 
 Generated code gives an app typed accessors. This package gives it everything else: fetching a newer catalog, caching it, deciding whether it is safe to apply, and rendering a message from it.
 
-> **Not yet implemented.** The contract and fixtures are in place; the runtime is blocked on the baselines below. See `../README.md` for repository-wide status.
+> **Core implemented.** 50 tests pass against the shared fixture project. Run them with `./gradlew test`, or with `./verify.sh` on a machine with only `kotlinc`.
 
-## Blocked on
+## Baselines
 
-`build.gradle.kts` is not written until these are confirmed with the Android team:
+Chosen rather than confirmed — the app teams delegated the call. Reasoning is in `CLAUDE.md`, and each is a one-line change.
 
-- Kotlin and AGP versions
-- **`minSdk`**, which decides whether desugaring is needed for `java.time` — the ISO-8601 date rendering depends on it
-- `compileSdk` and `targetSdk`
-- Whether the core is a pure JVM module with a thin Android module on top, or one Android library
+- **The core is a pure Kotlin/JVM module**, not an Android library. The 50-case suite then runs in milliseconds on every build instead of on an emulator
+- Kotlin 2.1.21, `jvmTarget` 1.8
+- **`minSdk` 26**, so `java.time` works with no desugaring
+- `compileSdk` / `targetSdk` 36
+- **Zero runtime dependencies**, which is why `Json.kt` is written rather than pulled in
 
-They are recorded as `_to be confirmed_` in `CLAUDE.md`.
+**Still to come:** the Android adapters — assets from a `Context`, `filesDir` caching, an OkHttp transport. About fifty lines in a second module, added once AGP is settled. No contract logic lives there.
 
 ## Intended use
 

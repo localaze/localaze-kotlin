@@ -6,18 +6,37 @@ Read `../CLAUDE.md` for the rules that govern every SDK package, and `../contrac
 
 ## Baselines
 
-**Not yet confirmed. Do not guess, and do not write `build.gradle.kts` until these are filled in.**
+**Chosen, not confirmed.** The app teams were asked and delegated the decision, so these are recorded with their reasoning to make an override cheap.
 
-| | |
-|---|---|
-| Kotlin version | `_to be confirmed_` |
-| AGP version | `_to be confirmed_` |
-| `minSdk` | `_to be confirmed_` |
-| `compileSdk` / `targetSdk` | `_to be confirmed_` |
-| Android library or pure JVM core | `_to be confirmed_` — see Layout |
-| Distribution | Local path dependency for now. an internal Maven repository is a later ticket |
+| | | Why |
+|---|---|---|
+| Core module | **Pure Kotlin/JVM** | See below — this is the load-bearing one |
+| Kotlin | 2.1.21 | Verified compiling on 2.4.10 |
+| `jvmTarget` | 1.8 | The widest target an Android consumer takes without trouble, and nothing here needs more |
+| `minSdk` | **26** | `java.time` natively, so no desugaring for the ISO-8601 rendering in contract §3. Android 8.0 is nine years old in 2026 |
+| `compileSdk` / `targetSdk` | 36 | |
+| AGP | Not needed by the core | Only the Android artifact needs it |
+| Runtime dependencies | **None** | |
+| Distribution | Local path dependency. The internal Maven repository is a later ticket | |
 
-`minSdk` decides whether desugaring is needed for `java.time`, which the ISO-8601 date rendering in contract §3 depends on. Settle it before writing the renderer.
+### Why the core is pure JVM
+
+The `LZ-54` guarantee is only worth something if it is tested, and the conformance suite is 50 cases that must run on **every build**. On the JVM they take milliseconds. As an Android library they would need an emulator or Robolectric, and a suite that slow is a suite people start skipping.
+
+Keeping `Context` out of the core is what makes this possible, which is why `Transport` and `Storage` are interfaces rather than a convenience over `Context`.
+
+The Android adapters — assets from a `Context`, `filesDir` caching, an OkHttp transport — are a second module, about fifty lines, added when the Android team confirms AGP. **None of the contract logic lives there.**
+
+`verify.sh` compiles and runs the suite with `kotlinc` alone, no Gradle and no Android SDK. That it works at all is the property being protected.
+
+### On the JSON reader
+
+Kotlin has no stdlib JSON parser, and the two obvious answers were both worse than writing one:
+
+- `org.json` is on Android but not the JVM, which would force the core to be an Android library and undo everything above.
+- `kotlinx-serialization` is a dependency plus a compiler plugin, and a dependency here is one every consuming app carries.
+
+`Json.kt` is about a hundred lines for a small fixed format, and the catalog tests cover it. It is not a general-purpose parser and must not grow into one.
 
 ## Layout
 
