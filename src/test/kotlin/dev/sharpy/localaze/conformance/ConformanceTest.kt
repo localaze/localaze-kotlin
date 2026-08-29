@@ -153,7 +153,51 @@ class ConformanceTest {
         assertTrue(accepts("1.0.0", "1.1.0", LocalazeUpdatePolicy.MINOR_AND_PATCH))
         assertFalse(accepts("1.0.0", "1.1.0", LocalazeUpdatePolicy.PATCH_ONLY))
         assertFalse(accepts("1.1.0", "1.0.1", LocalazeUpdatePolicy.MINOR_AND_PATCH))
+        // accepts() says no for the same version too — there is nothing to
+        // take. The updater turns that into upToDate rather than a refusal,
+        // which sameVersionIsUpToDate covers.
         assertFalse(accepts("1.0.0", "1.0.0", LocalazeUpdatePolicy.MINOR_AND_PATCH))
+    }
+
+    @Test
+    fun versionEndpointReportsItsStatus() = blocking {
+        // Found by the example app, not by a unit test. Without the status a
+        // wrong API key and a quiet network produce the same diagnostic.
+        val reported = Reported()
+        val runtime = runtimeFor(
+            "ru",
+            config = LocalazeConfig(
+                apiKey = "k",
+                onDiagnostic = reported.callback,
+                transport = FakeTransport(
+                    mutableMapOf("/version" to LocalazeResponse(status = 401)))))
+
+        val status = runtime.update()
+
+        assertEquals(LocalazeFetchOutcome.FAILED, status.outcome)
+        assertTrue(
+            reported.mentions("401"),
+            "a 401 must be distinguishable from a quiet network")
+    }
+
+    @Test
+    fun sameVersionIsUpToDate() = blocking {
+        // Nothing was refused: the server and the app agree. This is the most
+        // common outcome in production, so its wording matters most.
+        val reported = Reported()
+        val runtime = runtimeFor(
+            "ru",
+            config = LocalazeConfig(
+                apiKey = "k",
+                onDiagnostic = reported.callback,
+                transport = FakeTransport(
+                    mutableMapOf("/version" to ok(versionBody("1.0.0"))))))
+
+        val status = runtime.update()
+
+        assertEquals(LocalazeFetchOutcome.UP_TO_DATE, status.outcome)
+        assertEquals("1.0.0", status.version)
+        assertTrue(reported.isEmpty, "${reported.messages}")
     }
 
     @Test

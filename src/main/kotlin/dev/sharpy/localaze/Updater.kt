@@ -28,12 +28,21 @@ internal class Updater(
      * Cheap enough for every launch: it does not download the translations.
      */
     suspend fun currentVersion(): String? {
-        val response = get("/api/v1/read/version") ?: return null
-        if (!response.isOk) return null
+        val path = "/api/v1/read/version"
+        val response = get(path) ?: return null
+
+        if (!response.isOk) {
+            // The status has to reach the diagnostic here, not only on the
+            // translations path. A 401 is a wrong key, and without this it is
+            // indistinguishable from a quiet network to whoever reads the log —
+            // which is the exact failure the no-throw rule trades away.
+            diagnostics.report("$path returned ${response.status}")
+            return null
+        }
 
         val version = LocalazeCatalog.stringField(response.body!!, "version")
         if (version == null) {
-            diagnostics.report("/api/v1/read/version carried no version")
+            diagnostics.report("$path carried no version")
         }
         return version
     }
@@ -61,6 +70,14 @@ internal class Updater(
         val available = pinnedVersion ?: currentVersion()
         if (available == null) {
             return null to failed("The published version could not be read")
+        }
+
+        // Nothing new is not a refusal. Reporting it as one reads, in a log and
+        // in a UI, as though the policy blocked something — when in fact the
+        // server and the app already agree.
+        if (available == held) {
+            return null to LocalazeFetchStatus(
+                LocalazeFetchOutcome.UP_TO_DATE, "already on $held", held)
         }
 
         if (!LocalazeVersion.accepts(held, available, config.policy)) {
