@@ -21,13 +21,15 @@ Read `../CLAUDE.md` for the rules that govern every SDK package, and `../contrac
 
 ### Why the core is pure JVM
 
-The `LZ-54` guarantee is only worth something if it is tested, and the conformance suite is 50 cases that must run on **every build**. On the JVM they take milliseconds. As an Android library they would need an emulator or Robolectric, and a suite that slow is a suite people start skipping.
+The `LZ-54` guarantee is only worth something if it is tested, and the conformance suite is 52 cases that must run on **every build**. On the JVM they take milliseconds. As an Android library they would need an emulator or Robolectric, and a suite that slow is a suite people start skipping.
 
 Keeping `Context` out of the core is what makes this possible, which is why `Transport` and `Storage` are interfaces rather than a convenience over `Context`.
 
-The Android adapters — assets from a `Context`, `filesDir` caching, an OkHttp transport — are a second module, about fifty lines, added when the Android team confirms AGP. **None of the contract logic lives there.**
+The Android adapters live in `../localaze-kotlin-android`: an `HttpURLConnection` transport and asset/`filesDir` storage. **None of the contract logic is there** — if a bug turns out to be in policy or the signature check, it is in this module, where the test for it can run fast.
 
-`verify.sh` compiles and runs the suite with `kotlinc` alone, no Gradle and no Android SDK. That it works at all is the property being protected.
+`./gradlew test` runs the suite under real Gradle and JUnit 5. `verify.sh` runs
+the same suite with `kotlinc` alone — no Gradle, no Android SDK. Both are
+verified; that the second works at all is the property being protected.
 
 ### On the JSON reader
 
@@ -44,7 +46,8 @@ Kotlin has no stdlib JSON parser, and the two obvious answers were both worse th
 localaze-kotlin/
 ├── CLAUDE.md
 ├── README.md
-├── build.gradle.kts               blocked on Baselines
+├── build.gradle.kts               verified: ./gradlew test passes
+├── verify.sh                      the same suite, kotlinc only
 ├── src/
 │   ├── main/kotlin/dev/sharpy/localaze/
 │   │   ├── Localaze.kt                  the public entry point
@@ -56,9 +59,8 @@ localaze-kotlin/
 │   │   ├── CatalogStore.kt              applied, cached, bundled, compiled-in
 │   │   ├── Updater.kt                   currentVersion, fetchIfAccepted, ETag
 │   │   ├── Diagnostics.kt
-│   │   ├── Transport.kt                 the interface
-│   │   ├── Storage.kt                   the interface
-│   │   └── platform/                    default implementations, the only place OkHttp and Context appear
+│   │   ├── Json.kt                      a minimal reader; see On the JSON reader
+│   │   └── Seams.kt                     Transport, Storage, config, diagnostics
 │   └── test/kotlin/dev/sharpy/localaze/
 │       ├── conformance/                 one file per group in ../contract/conformance.json
 │       └── fakes/                       FakeTransport, FakeStorage
@@ -66,22 +68,11 @@ localaze-kotlin/
 
 Package root `dev.sharpy.localaze` matches the backend, which is deliberate — one name for one platform across the whole repository.
 
-**Worth deciding early:** whether the core is a pure JVM module with a thin Android module on top, or one Android library. Pure JVM makes the conformance tests run on the JVM in milliseconds rather than in an instrumented test on a device or emulator, which matters when the suite runs on every build. It costs a second module. Record the choice here once made.
-
 ## Transport and storage
 
-`Transport` and `Storage` are interfaces. **Core code never touches OkHttp, `Context`, or the filesystem directly.**
+`Transport` and `Storage` are interfaces, and **this module implements neither.** There is no `platform/` package here: the Android implementations live in `../localaze-kotlin-android`, because the moment one of them touches `Context` this module stops being pure JVM and its suite stops being fast.
 
-`platform/` holds the defaults and is the only package permitted to. Keeping `Context` out of the core is also what makes the pure-JVM option above possible.
-
-## Defaults
-
-| Option | Kotlin default |
-|---|---|
-| `assetPath` | `localaze/` under `assets/` |
-| `cacheDirectory` | `context.filesDir/localaze` |
-
-Android can find a writable directory, so persistence is on by default, as on iOS and unlike Dart. A default that differs per platform is fine; behaviour given the same configuration is not.
+Defaults are that module's business — assets under `localaze/`, cache in `context.filesDir/localaze`. Persistence is on there by default, as on iOS and unlike Dart, because Android can find a writable directory without an extra dependency. A default that differs per platform is fine; behaviour given the same configuration is not.
 
 ## No `strings.xml`
 
@@ -103,8 +94,8 @@ Keep the Compose surface in its own file and out of the core, so a Views-only ap
 
 Everything in `../CLAUDE.md`, plus:
 
-- Never touch OkHttp, `Context`, or the filesystem outside `platform/`
+- Never touch `Context`, the network, or the filesystem in this module at all — that is what `localaze-kotlin-android` is for
 - Never read from or generate `strings.xml`
 - Never make the core depend on Compose
 - Never require an instrumented test for something a JVM test can cover
-- Never write `build.gradle.kts` before `minSdk` is confirmed
+- Never add a dependency. `Json.kt` exists precisely so this line can stay true

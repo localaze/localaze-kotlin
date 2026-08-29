@@ -4,7 +4,9 @@ The Localaze runtime for Kotlin and Android. `LZ-57`.
 
 Generated code gives an app typed accessors. This package gives it everything else: fetching a newer catalog, caching it, deciding whether it is safe to apply, and rendering a message from it.
 
-> **Core implemented.** 50 tests pass against the shared fixture project. Run them with `./gradlew test`, or with `./verify.sh` on a machine with only `kotlinc`.
+> **Core implemented.** 52 tests pass against the shared fixture project, under
+> real Gradle (`./gradlew test`) and with `kotlinc` alone (`./verify.sh`) on a
+> machine that has no Gradle and no Android SDK.
 
 ## Baselines
 
@@ -16,7 +18,9 @@ Chosen rather than confirmed — the app teams delegated the call. Reasoning is 
 - `compileSdk` / `targetSdk` 36
 - **Zero runtime dependencies**, which is why `Json.kt` is written rather than pulled in
 
-**Still to come:** the Android adapters — assets from a `Context`, `filesDir` caching, an OkHttp transport. About fifty lines in a second module, added once AGP is settled. No contract logic lives there.
+The Android adapters now live in `../localaze-kotlin-android`: an
+`HttpURLConnection` transport and asset/`filesDir` storage, about 130 lines with
+no contract logic in them. That module is **not** verified — AGP needs JDK 17+.
 
 ## Intended use
 
