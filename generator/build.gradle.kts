@@ -6,6 +6,7 @@
 
 plugins {
     kotlin("jvm")
+    `maven-publish`
 }
 
 group = "dev.sharpy.localaze"
@@ -59,4 +60,37 @@ tasks.test {
     systemProperty("localaze.golden", "${rootDir}/src/test/kotlin/dev/sharpy/localaze/golden/Localaze.g.kt")
     systemProperty("localaze.generatorJar", tasks.jar.get().archiveFile.get().asFile.path)
     testLogging { events("passed", "failed") }
+}
+
+// The self-contained jar is the artifact. An app's build resolves it like any
+// other dependency and runs it with `java -jar`; it is never on a classpath.
+publishing {
+    publications {
+        create<MavenPublication>("generator") {
+            artifactId = "localaze-generator"
+            artifact(tasks.jar)
+            pom {
+                name.set("Localaze generator")
+                description.set("Generates typed Kotlin accessors and catalogs from a published Localaze release.")
+            }
+        }
+    }
+}
+
+// Publishing. The repository comes from the environment, so the same build
+// publishes to whichever Maven registry the release runs against and no URL or
+// credential is committed. `publishToMavenLocal` needs none of it.
+publishing {
+    repositories {
+        System.getenv("LOCALAZE_MAVEN_URL")?.let { target ->
+            maven {
+                name = "release"
+                url = uri(target)
+                credentials {
+                    username = System.getenv("LOCALAZE_MAVEN_USER")
+                    password = System.getenv("LOCALAZE_MAVEN_PASSWORD")
+                }
+            }
+        }
+    }
 }

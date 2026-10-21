@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "2.1.21"
+    `maven-publish`
 }
 
 group = "dev.sharpy.localaze"
@@ -30,6 +31,7 @@ kotlin {
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+    withSourcesJar()
 }
 
 tasks.test {
@@ -42,5 +44,36 @@ tasks.test {
 
     testLogging {
         events("passed", "failed")
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("runtime") {
+            artifactId = "localaze"
+            from(components["java"])
+            pom {
+                name.set("Localaze runtime")
+                description.set("Fetches, caches and applies Localaze catalogs and renders messages from them. Never throws.")
+            }
+        }
+    }
+}
+
+// Publishing. The repository comes from the environment, so the same build
+// publishes to whichever Maven registry the release runs against and no URL or
+// credential is committed. `publishToMavenLocal` needs none of it.
+publishing {
+    repositories {
+        System.getenv("LOCALAZE_MAVEN_URL")?.let { target ->
+            maven {
+                name = "release"
+                url = uri(target)
+                credentials {
+                    username = System.getenv("LOCALAZE_MAVEN_USER")
+                    password = System.getenv("LOCALAZE_MAVEN_PASSWORD")
+                }
+            }
+        }
     }
 }
