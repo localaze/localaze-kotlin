@@ -60,6 +60,12 @@ publishing {
             artifactId = "localaze-android"
             afterEvaluate { from(components["release"]) }
             pom {
+                licenses {
+                    license {
+                        name.set("MIT")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
                 name.set("Localaze for Android")
                 description.set("The Android transport and storage for the Localaze runtime.")
             }

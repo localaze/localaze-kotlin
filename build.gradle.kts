@@ -53,6 +53,12 @@ publishing {
             artifactId = "localaze"
             from(components["java"])
             pom {
+                licenses {
+                    license {
+                        name.set("MIT")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
                 name.set("Localaze runtime")
                 description.set("Fetches, caches and applies Localaze catalogs and renders messages from them. Never throws.")
             }

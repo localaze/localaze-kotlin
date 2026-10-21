@@ -70,6 +70,12 @@ publishing {
             artifactId = "localaze-generator"
             artifact(tasks.jar)
             pom {
+                licenses {
+                    license {
+                        name.set("MIT")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
                 name.set("Localaze generator")
                 description.set("Generates typed Kotlin accessors and catalogs from a published Localaze release.")
             }
