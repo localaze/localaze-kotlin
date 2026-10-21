@@ -1,9 +1,5 @@
-// NOT VERIFIED. AGP needs JDK 17 or newer, and this was written on a machine
-// with only JDK 8. `../../localaze-kotlin` builds and tests under real Gradle;
-// this app does not, and `./verify-generated.sh` covers the one part of it that
-// can be checked without an Android toolchain.
-//
-// Expect to adjust the AGP, Compose and lifecycle versions on the first run.
+// Building needs JDK 17 or newer, which AGP requires, and an Android SDK.
+// `./verify-generated.sh` checks the generated code without either.
 
 plugins {
     id("com.android.application") version "8.7.3"
@@ -55,7 +51,7 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":localaze-kotlin-android"))
+    implementation("dev.sharpy.localaze:localaze-android:0.1.0")
 
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
     implementation("androidx.compose.material3:material3")

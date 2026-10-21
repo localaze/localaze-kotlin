@@ -17,10 +17,9 @@ dependencyResolutionManagement {
 // application plugin — so there is no :app subproject to include.
 rootProject.name = "localaze-android-demo"
 
-// The SDK is consumed by path, not from a registry. Publishing to Localaze's
-// internal Maven repository is a later ticket — see ../../README.md.
-include(":localaze-kotlin")
-project(":localaze-kotlin").projectDir = file("../../localaze-kotlin")
-
-include(":localaze-kotlin-android")
-project(":localaze-kotlin-android").projectDir = file("../../localaze-kotlin-android")
+// The SDK is consumed by coordinates, as an app will consume the published
+// artifacts, and these composite builds substitute the local source for them.
+// Composite rather than included subprojects, because each SDK build declares
+// its own plugin versions and Gradle refuses those inside one build.
+includeBuild("../../localaze-kotlin")
+includeBuild("../../localaze-kotlin-android")

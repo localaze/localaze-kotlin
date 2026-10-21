@@ -6,7 +6,7 @@
     <application
         android:label="Localaze SDK"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Material3.DynamicColors.DayNight"
+        android:theme="@android:style/Theme.Material.NoActionBar"
         android:usesCleartextTraffic="true">
 
         <!--
