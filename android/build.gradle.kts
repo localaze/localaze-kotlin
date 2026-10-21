@@ -7,6 +7,7 @@
 plugins {
     id("com.android.library") version "8.7.3"
     kotlin("android") version "2.1.21"
+    `maven-publish`
 }
 
 group = "dev.sharpy.localaze"
@@ -28,6 +29,12 @@ android {
     }
 
     sourceSets["main"].kotlin.srcDir("src/main/kotlin")
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 }
 
 kotlin {
@@ -45,4 +52,35 @@ dependencies {
     // interfaces are suspending, which is what an Android app expects. Every
     // Android project already has it.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("android") {
+            artifactId = "localaze-android"
+            afterEvaluate { from(components["release"]) }
+            pom {
+                name.set("Localaze for Android")
+                description.set("The Android transport and storage for the Localaze runtime.")
+            }
+        }
+    }
+}
+
+// Publishing. The repository comes from the environment, so the same build
+// publishes to whichever Maven registry the release runs against and no URL or
+// credential is committed. `publishToMavenLocal` needs none of it.
+publishing {
+    repositories {
+        System.getenv("LOCALAZE_MAVEN_URL")?.let { target ->
+            maven {
+                name = "release"
+                url = uri(target)
+                credentials {
+                    username = System.getenv("LOCALAZE_MAVEN_USER")
+                    password = System.getenv("LOCALAZE_MAVEN_PASSWORD")
+                }
+            }
+        }
+    }
 }
