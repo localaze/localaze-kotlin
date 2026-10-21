@@ -47,7 +47,16 @@ localaze-kotlin/
 ├── CLAUDE.md
 ├── README.md
 ├── build.gradle.kts               verified: ./gradlew test passes
-├── verify.sh                      the same suite, kotlinc only
+├── settings.gradle.kts            the runtime, plus the generator module
+├── verify.sh                      the runtime suite, kotlinc only
+├── generator/                     the generator: a self-contained jar, never linked into an app
+│   ├── build.gradle.kts           compiles ../src/main/.../Json.kt in, depends on nothing
+│   └── src/
+│       ├── main/kotlin/dev/sharpy/localaze/generator/
+│       │   ├── Plan.kt                  decides and checks
+│       │   ├── KotlinEmitter.kt         spells
+│       │   └── Main.kt                  the command: network and files, nothing else
+│       └── test/kotlin/…                the generator group, and the jar as a process
 ├── src/
 │   ├── main/kotlin/dev/sharpy/localaze/
 │   │   ├── Localaze.kt                  the public entry point
@@ -63,6 +72,7 @@ localaze-kotlin/
 │   │   └── Seams.kt                     Transport, Storage, config, diagnostics
 │   └── test/kotlin/dev/sharpy/localaze/
 │       ├── conformance/                 one file per group in ../contract/conformance.json
+│       ├── golden/                      Localaze.g.kt, the generator's golden, compiled and rendered
 │       └── fakes/                       FakeTransport, FakeStorage
 ```
 
@@ -83,6 +93,18 @@ The reasoning is the `LZ-54` guarantee. Routing Android through resources makes 
 The cost is real and should be stated to the Android team rather than glossed: system-level locale features and accessibility tooling see no resources for these strings.
 
 This does not remove `LZ-18` Android export. That serves teams not using the SDK and the migration path off Lokalise, and it is a separate output.
+
+## The generator
+
+`java -jar localaze-generator.jar`, specified in `../contract/generator-contract.md`.
+
+- **It is its own Gradle module and its own jar.** Nothing an app links contains generator code, and the runtime jar gains nothing from it.
+- **It shares `Json.kt` by compiling the file in**, not by depending on the runtime. `Json` stays internal, so the runtime's public API does not widen to serve a build tool.
+- **It targets Java 8** and uses `HttpURLConnection`, so it runs wherever the runtime builds.
+- **The JVM's limits shape the output.** A string constant holds at most 65,535 bytes, so a large compiled-in catalog is split into chunks. A method holds at most 64 KB of bytecode, so the signature map is built in functions of 500 entries.
+- **Plural conditions are rewritten to `Double` arithmetic.** Kotlin will not compare a `Double` with an `Int` literal, so every operand is a `Double` and every literal gains `.0`.
+- **File-private helpers start with an underscore.** No accessor can, so a key named `plural` cannot shadow them.
+- The golden file is `src/test/kotlin/dev/sharpy/localaze/golden/Localaze.g.kt`, compiled with the runtime's tests. When output changes on purpose, run `UPDATE_GOLDEN=1 ./gradlew :generator:test --tests '*GeneratorTest.golden'` and review the diff.
 
 ## Views and Compose
 
