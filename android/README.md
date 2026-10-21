@@ -3,10 +3,21 @@
 The Android half of the Kotlin SDK: an `HttpURLConnection` transport and
 asset/`filesDir` storage. About 130 lines.
 
-> **Not verified.** AGP needs JDK 17 or newer, and this was written on a machine
-> with only JDK 8. `localaze-kotlin`'s own Gradle build **is** verified and its
-> 52 tests pass under real Gradle; this module is not. Expect to adjust the AGP
-> and coroutines versions on the first run.
+> **Built and run.** It compiles with AGP 8.7.3 on JDK 21, and the Compose demo
+> in `../examples/android-app` ran on an API 34 emulator against the stub server:
+> it fetched and applied a patch, refused a retyped catalog by signature, and
+> sent `If-None-Match` with the previous ETag.
+
+## Building
+
+A standalone Gradle build that pulls in `../localaze-kotlin` as a composite
+build and depends on it by coordinates, `dev.sharpy.localaze:localaze`, so
+nothing changes when the core is published. It needs JDK 17 or newer and an
+Android SDK; the core needs neither.
+
+```
+JAVA_HOME=<jdk 17+> ANDROID_HOME=<sdk> ../localaze-kotlin/gradlew -p . assembleRelease
+```
 
 ## What is deliberately not here
 

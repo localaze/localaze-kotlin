@@ -1,14 +1,16 @@
 // The Android half of the Kotlin SDK: the transport and storage the pure-JVM
 // core leaves as interfaces. Nothing that decides behaviour lives here.
 //
-// NOT VERIFIED. AGP needs JDK 17 or newer, and the machine this was written on
-// had only JDK 8 — the pure-Kotlin core's own Gradle build is verified, this
-// one is not. Expect to adjust versions on first run.
+// Building it needs JDK 17 or newer, which AGP requires, and an Android SDK.
+// The core does not: it stays a pure JVM build so its suite runs anywhere.
 
 plugins {
     id("com.android.library") version "8.7.3"
     kotlin("android") version "2.1.21"
 }
+
+group = "dev.sharpy.localaze"
+version = "0.1.0"
 
 android {
     namespace = "dev.sharpy.localaze.android"
@@ -35,7 +37,9 @@ kotlin {
 }
 
 dependencies {
-    api(project(":localaze-kotlin"))
+    // By coordinates. settings.gradle.kts substitutes the local build until
+    // the core is published.
+    api("dev.sharpy.localaze:localaze:0.1.0")
 
     // Coroutines is the one dependency, and it is unavoidable: the SDK's
     // interfaces are suspending, which is what an Android app expects. Every
