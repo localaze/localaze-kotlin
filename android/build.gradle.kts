@@ -19,7 +19,7 @@ android {
 
     defaultConfig {
         // 26 for java.time without desugaring, matching the core. See
-        // ../localaze-kotlin/CLAUDE.md for why.
+        // ../CLAUDE.md for why.
         minSdk = 26
     }
 

@@ -24,7 +24,7 @@ That covers the generated accessors, the compiled Russian plural rule including
 the 11 and 111 exceptions, and the ISO-8601 date rendering, on any machine. The
 Compose UI and the Android transport and storage need a real Android build.
 
-The SDK underneath is verified independently: `../../localaze-kotlin` builds and
+The SDK underneath is verified independently: the repository root builds and
 runs its 52 conformance tests under real Gradle.
 
 ## Run it
@@ -32,13 +32,13 @@ runs its 52 conformance tests under real Gradle.
 Start the stub server first:
 
 ```
-cd ../stub-server && dart run serve.dart
+cd ../../contract/stub-server && dart run serve.dart
 ```
 
 Then:
 
 ```
-JAVA_HOME=<jdk 17+> ANDROID_HOME=<sdk> ../../localaze-kotlin/gradlew -p . installDebug
+JAVA_HOME=<jdk 17+> ANDROID_HOME=<sdk> ../../gradlew -p . installDebug
 ```
 
 This app has no Gradle wrapper of its own, so it borrows the Kotlin package's. The SDK comes in as composite builds by coordinates, as a real app would depend on the published packages.

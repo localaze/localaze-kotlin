@@ -9,7 +9,7 @@ package dev.sharpy.localaze
  * failure row in the contract is reachable with a fake and unreachable without
  * one.
  *
- * See `../../contract/runtime-contract.md` sections 8 and 10.
+ * See `contract/runtime-contract.md` sections 8 and 10.
  */
 
 /**
@@ -149,7 +149,7 @@ data class LocalazeFetchStatus(
 /**
  * Everything an app can change, all of it optional but the key.
  *
- * See `../../contract/runtime-contract.md` section 9.
+ * See `contract/runtime-contract.md` section 9.
  */
 data class LocalazeConfig(
     /**

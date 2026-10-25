@@ -6,7 +6,7 @@ package dev.sharpy.localaze
  * Nothing here throws. Every failure path leaves the app on the catalog it
  * already had, because a translation outage must never become a crash.
  *
- * See `../../contract/runtime-contract.md` sections 5, 6 and 8.
+ * See `contract/runtime-contract.md` sections 5, 6 and 8.
  */
 internal class Updater(
     private val config: LocalazeConfig,

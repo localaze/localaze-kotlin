@@ -3,7 +3,7 @@ package dev.sharpy.localaze
 /**
  * Semantic versions and the update policy.
  *
- * See `../../contract/runtime-contract.md` section 5.
+ * See `contract/runtime-contract.md` section 5.
  */
 
 /**

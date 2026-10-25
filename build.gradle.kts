@@ -39,7 +39,7 @@ tasks.test {
 
     // The fixture project is shared with the Dart and Swift packages. Copying
     // it in would mean a Kotlin-only version that drifts within a release.
-    systemProperty("localaze.fixtures", "${projectDir}/../contract/fixtures")
+    systemProperty("localaze.fixtures", "${projectDir}/contract/fixtures")
     systemProperty("localaze.sources", "${projectDir}/src/main/kotlin")
 
     testLogging {

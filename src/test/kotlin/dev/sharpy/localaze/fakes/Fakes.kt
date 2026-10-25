@@ -121,14 +121,14 @@ class Reported {
 // The shared fixture project
 
 /**
- * Loads a file from `../contract/fixtures`.
+ * Loads a file from `contract/fixtures`, the contract submodule.
  *
  * One fixture project, shared by all three packages. A Kotlin-only copy would
  * drift from Dart's and Swift's within a release.
  */
 fun fixture(path: String): String {
     val root = System.getProperty("localaze.fixtures")
-        ?: "${System.getProperty("user.dir")}/../contract/fixtures"
+        ?: "${System.getProperty("user.dir")}/contract/fixtures"
     return File("$root/$path").readText()
 }
 

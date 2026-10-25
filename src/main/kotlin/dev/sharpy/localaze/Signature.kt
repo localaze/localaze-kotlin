@@ -4,7 +4,7 @@ package dev.sharpy.localaze
  * What the generated code promised its call sites, and checking a catalog
  * against it.
  *
- * See `../../contract/runtime-contract.md` section 4.
+ * See `contract/runtime-contract.md` section 4.
  */
 class LocalazeSignature(val keys: Map<String, List<LocalazeParam>>) {
 

@@ -45,7 +45,7 @@ import java.time.Instant
 /**
  * A Compose demo that exercises every feature of the Localaze Kotlin SDK.
  *
- * Point it at the stub server in `../stub-server` (`dart run serve.dart`), then
+ * Point it at the stub server in `../../contract/stub-server` (`dart run serve.dart`), then
  * use the Server card to put a patch, a major, or a retyped catalog on offer
  * and watch the SDK accept or refuse it.
  *

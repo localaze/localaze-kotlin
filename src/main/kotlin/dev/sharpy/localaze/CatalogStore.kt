@@ -11,7 +11,7 @@ package dev.sharpy.localaze
  * has. That is the only reason the levels are kept separate rather than merged
  * once at load.
  *
- * See `../../contract/runtime-contract.md` section 7.
+ * See `contract/runtime-contract.md` section 7.
  */
 internal class CatalogStore(
     private val language: String,

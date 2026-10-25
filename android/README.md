@@ -16,7 +16,7 @@ nothing changes when the core is published. It needs JDK 17 or newer and an
 Android SDK; the core needs neither.
 
 ```
-JAVA_HOME=<jdk 17+> ANDROID_HOME=<sdk> ../localaze-kotlin/gradlew -p . assembleRelease
+JAVA_HOME=<jdk 17+> ANDROID_HOME=<sdk> ../gradlew -p . assembleRelease
 ```
 
 ## What is deliberately not here

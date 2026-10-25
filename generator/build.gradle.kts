@@ -56,7 +56,7 @@ tasks.jar {
 tasks.test {
     useJUnitPlatform()
     dependsOn(tasks.jar)
-    systemProperty("localaze.fixtures", "${rootDir}/../contract/fixtures")
+    systemProperty("localaze.fixtures", "${rootDir}/contract/fixtures")
     systemProperty("localaze.golden", "${rootDir}/src/test/kotlin/dev/sharpy/localaze/golden/Localaze.g.kt")
     systemProperty("localaze.generatorJar", tasks.jar.get().archiveFile.get().asFile.path)
     testLogging { events("passed", "failed") }

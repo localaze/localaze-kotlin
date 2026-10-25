@@ -21,5 +21,5 @@ rootProject.name = "localaze-android-demo"
 // artifacts, and these composite builds substitute the local source for them.
 // Composite rather than included subprojects, because each SDK build declares
 // its own plugin versions and Gradle refuses those inside one build.
-includeBuild("../../localaze-kotlin")
-includeBuild("../../localaze-kotlin-android")
+includeBuild("../..")
+includeBuild("../../android")

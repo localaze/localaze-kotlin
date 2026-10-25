@@ -7,7 +7,7 @@ package dev.sharpy.localaze
  * references. Nothing here parses MessageFormat 2 and no CLDR data ships with
  * the package.
  *
- * See `../../contract/runtime-contract.md` section 2.
+ * See `contract/runtime-contract.md` section 2.
  */
 
 /**

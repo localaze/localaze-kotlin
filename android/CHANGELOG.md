@@ -1,6 +1,6 @@
 # Changelog
 
-Versions follow `../RELEASING.md`: the Dart, Swift and Kotlin packages release together, at the same version.
+Versions follow `contract/RELEASING.md`: the Dart, Swift and Kotlin packages release together, at the same version.
 
 ## 0.1.0 — unreleased
 

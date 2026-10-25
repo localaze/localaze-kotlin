@@ -18,7 +18,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-CORE_DIR="../../localaze-kotlin"
+CORE_DIR="../.."
 CORE_JAR="$(ls "$CORE_DIR"/build/libs/localaze-*.jar 2>/dev/null | grep -v -- -sources.jar | head -1 || true)"
 
 if [ -z "$CORE_JAR" ]; then

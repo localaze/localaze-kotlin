@@ -27,7 +27,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
- * The conformance suite, mirroring `../contract/conformance.json`.
+ * The conformance suite, mirroring `contract/conformance.json`.
  *
  * Annotated with `kotlin.test.@Test`, so Gradle runs these through JUnit
  * unchanged. `ConformanceRunner` also drives them directly, which is how they

@@ -25,7 +25,7 @@ const val DEFAULT_BASE_URL: String = "http://10.0.2.2:8787"
 /** The stub server's key. A real one carries the project and the environment. */
 const val API_KEY: String = "demo-key"
 
-/** Mirrors the scenarios in `../../stub-server/serve.dart`. */
+/** Mirrors the scenarios in `../../contract/stub-server/serve.dart`. */
 enum class Scenario(val explanation: String) {
     BASE("1.0.0 — what the app was built against. Nothing to take."),
     PATCH("1.0.1 — a wording fix. Accepted under patchOnly and above."),
