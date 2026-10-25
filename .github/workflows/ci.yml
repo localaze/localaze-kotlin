@@ -47,7 +47,7 @@ jobs:
           git -C contract checkout --quiet FETCH_HEAD
           echo "Testing against contract $(git -C contract rev-parse --short HEAD)"
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
