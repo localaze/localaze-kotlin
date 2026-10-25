@@ -7,6 +7,7 @@
 plugins {
     kotlin("jvm")
     `maven-publish`
+    signing
 }
 
 group = "dev.sharpy.localaze"
@@ -42,6 +43,19 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+// Maven Central requires sources and javadoc beside every jar, including one
+// that is run rather than linked. The generator's documentation is the README.
+val sourcesJar by tasks.registering(Jar::class) {
+    archiveBaseName.set("localaze-generator")
+    archiveClassifier.set("sources")
+    from(sourceSets["main"].allSource)
+}
+val javadocJar by tasks.registering(Jar::class) {
+    archiveBaseName.set("localaze-generator")
+    archiveClassifier.set("javadoc")
+    from(rootProject.file("README.md"))
+}
+
 // One self-contained jar, so a build machine runs `java -jar` with nothing
 // else installed: the Kotlin standard library goes inside.
 tasks.jar {
@@ -69,34 +83,17 @@ publishing {
         create<MavenPublication>("generator") {
             artifactId = "localaze-generator"
             artifact(tasks.jar)
-            pom {
-                licenses {
-                    license {
-                        name.set("MIT")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-                name.set("Localaze generator")
-                description.set("Generates typed Kotlin accessors and catalogs from a published Localaze release.")
-            }
+            artifact(sourcesJar)
+            artifact(javadocJar)
+            localazePom("Localaze generator", "Generates typed Kotlin accessors and catalogs from a published Localaze release.")
+        }
+    }
+    repositories {
+        maven {
+            name = "staging"
+            url = uri(localazeStagingDir(rootDir))
         }
     }
 }
 
-// Publishing. The repository comes from the environment, so the same build
-// publishes to whichever Maven registry the release runs against and no URL or
-// credential is committed. `publishToMavenLocal` needs none of it.
-publishing {
-    repositories {
-        System.getenv("LOCALAZE_MAVEN_URL")?.let { target ->
-            maven {
-                name = "release"
-                url = uri(target)
-                credentials {
-                    username = System.getenv("LOCALAZE_MAVEN_USER")
-                    password = System.getenv("LOCALAZE_MAVEN_PASSWORD")
-                }
-            }
-        }
-    }
-}
+localazeSigning(publishing.publications)

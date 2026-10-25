@@ -1,0 +1,64 @@
+# A version tag publishes the runtime, the generator and the Android adapters
+# to Maven Central, as one deployment. Tags are made by the release command
+# (contract/RELEASING.md) and never by hand on a commit whose CI is red.
+name: Release
+
+on:
+  push:
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: write   # the GitHub release
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  maven-central:
+    name: Maven Central
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    # The secrets live in this environment, which only tags can use.
+    environment: maven-central
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: The tag is on main, and matches the build's version
+        run: |
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::$GITHUB_REF_NAME is not on main"; exit 1; }
+          grep -q "^version = \"$GITHUB_REF_NAME\"" build.gradle.kts || { echo "::error::build.gradle.kts is not at $GITHUB_REF_NAME"; exit 1; }
+          grep -q "^version = \"$GITHUB_REF_NAME\"" android/build.gradle.kts || { echo "::error::android/build.gradle.kts is not at $GITHUB_REF_NAME"; exit 1; }
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Test
+        run: ./gradlew test --console=plain
+
+      - name: Stage, signed
+        env:
+          LOCALAZE_SIGNING_KEY: ${{ secrets.LOCALAZE_SIGNING_KEY }}
+          LOCALAZE_SIGNING_PASSWORD: ${{ secrets.LOCALAZE_SIGNING_PASSWORD }}
+        run: |
+          ./gradlew publishAllPublicationsToStagingRepository --console=plain
+          (cd android && ../gradlew -p . publishAllPublicationsToStagingRepository --console=plain)
+
+      - name: Upload to Maven Central
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: scripts/central-upload.sh
+
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 contract/scripts/changelog-entry.py "$GITHUB_REF_NAME" CHANGELOG.md android/CHANGELOG.md > notes.md
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag

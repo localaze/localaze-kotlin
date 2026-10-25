@@ -82,6 +82,19 @@ jobs:
         working-directory: examples/android-app
         run: ../../gradlew -p . assembleDebug --console=plain
 
+      # The release job's path, short of the upload: every artifact staged,
+      # signed (with a key made for this run) and bundled. A POM, javadoc or
+      # signing problem fails here, on the pull request, not on release day.
+      - name: Maven Central bundle, signed with a throwaway key
+        run: |
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"; mkdir -m 700 "$GNUPGHOME"
+          gpg --batch --passphrase ci --quick-gen-key "Localaze CI <ci@invalid>" ed25519 sign 1d
+          export LOCALAZE_SIGNING_KEY="$(gpg --batch --pinentry-mode loopback --passphrase ci --armor --export-secret-keys)"
+          export LOCALAZE_SIGNING_PASSWORD=ci
+          ./gradlew publishAllPublicationsToStagingRepository --console=plain
+          (cd android && ../gradlew -p . publishAllPublicationsToStagingRepository --console=plain)
+          DRY_RUN=1 scripts/central-upload.sh
+
       - name: Test reports
         if: failure()
         uses: actions/upload-artifact@v7

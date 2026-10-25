@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "2.1.21"
     `maven-publish`
+    signing
 }
 
 group = "dev.sharpy.localaze"
@@ -32,6 +33,10 @@ java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
     withSourcesJar()
+    // Maven Central requires a javadoc jar. Dokka would add a toolchain for a
+    // page nobody reads in a jar; the README and KDoc in the sources jar are
+    // the documentation.
+    withJavadocJar()
 }
 
 tasks.test {
@@ -52,34 +57,18 @@ publishing {
         create<MavenPublication>("runtime") {
             artifactId = "localaze"
             from(components["java"])
-            pom {
-                licenses {
-                    license {
-                        name.set("MIT")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-                name.set("Localaze runtime")
-                description.set("Fetches, caches and applies Localaze catalogs and renders messages from them. Never throws.")
-            }
+            localazePom("Localaze runtime", "Fetches, caches and applies Localaze catalogs and renders messages from them. Never throws.")
+        }
+    }
+    repositories {
+        // A folder, not a registry. The release job publishes all three
+        // artifacts here, then uploads the folder to Maven Central as one
+        // deployment, so a release is all three or none (scripts/central-upload.sh).
+        maven {
+            name = "staging"
+            url = uri(localazeStagingDir(rootDir))
         }
     }
 }
 
-// Publishing. The repository comes from the environment, so the same build
-// publishes to whichever Maven registry the release runs against and no URL or
-// credential is committed. `publishToMavenLocal` needs none of it.
-publishing {
-    repositories {
-        System.getenv("LOCALAZE_MAVEN_URL")?.let { target ->
-            maven {
-                name = "release"
-                url = uri(target)
-                credentials {
-                    username = System.getenv("LOCALAZE_MAVEN_USER")
-                    password = System.getenv("LOCALAZE_MAVEN_PASSWORD")
-                }
-            }
-        }
-    }
-}
+localazeSigning(publishing.publications)

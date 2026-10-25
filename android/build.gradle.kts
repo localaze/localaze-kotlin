@@ -8,6 +8,7 @@ plugins {
     id("com.android.library") version "8.7.3"
     kotlin("android") version "2.1.21"
     `maven-publish`
+    signing
 }
 
 group = "dev.sharpy.localaze"
@@ -33,6 +34,7 @@ android {
     publishing {
         singleVariant("release") {
             withSourcesJar()
+            withJavadocJar()
         }
     }
 }
@@ -59,34 +61,54 @@ publishing {
         create<MavenPublication>("android") {
             artifactId = "localaze-android"
             afterEvaluate { from(components["release"]) }
+            // The POM Maven Central requires. The same as the root build's
+            // buildSrc/src/main/kotlin/LocalazePublishing.kt, which a separate
+            // build cannot see; keep the two in step.
             pom {
-                licenses {
-                    license {
-                        name.set("MIT")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
                 name.set("Localaze for Android")
                 description.set("The Android transport and storage for the Localaze runtime.")
+                url.set("https://github.com/localaze/localaze-kotlin")
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                        distribution.set("repo")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("sharabiddin")
+                        name.set("Sharabiddin Ahmayev")
+                        url.set("https://github.com/sharabiddin")
+                    }
+                }
+                scm {
+                    url.set("https://github.com/localaze/localaze-kotlin")
+                    connection.set("scm:git:https://github.com/localaze/localaze-kotlin.git")
+                    developerConnection.set("scm:git:https://github.com/localaze/localaze-kotlin.git")
+                }
+                issueManagement {
+                    system.set("GitHub")
+                    url.set("https://github.com/localaze/localaze-kotlin/issues")
+                }
             }
+        }
+    }
+    repositories {
+        // The repository root's staging folder, beside the runtime and the
+        // generator, so the three are uploaded as one deployment.
+        maven {
+            name = "staging"
+            url = uri(System.getenv("LOCALAZE_STAGING_DIR") ?: "${rootDir}/../build/staging-deploy")
         }
     }
 }
 
-// Publishing. The repository comes from the environment, so the same build
-// publishes to whichever Maven registry the release runs against and no URL or
-// credential is committed. `publishToMavenLocal` needs none of it.
-publishing {
-    repositories {
-        System.getenv("LOCALAZE_MAVEN_URL")?.let { target ->
-            maven {
-                name = "release"
-                url = uri(target)
-                credentials {
-                    username = System.getenv("LOCALAZE_MAVEN_USER")
-                    password = System.getenv("LOCALAZE_MAVEN_PASSWORD")
-                }
-            }
-        }
+// Signed in the release job, where the key is in the environment; unsigned
+// otherwise, so a local build needs no key.
+System.getenv("LOCALAZE_SIGNING_KEY")?.let { key ->
+    signing {
+        useInMemoryPgpKeys(key, System.getenv("LOCALAZE_SIGNING_PASSWORD") ?: "")
+        sign(publishing.publications)
     }
 }

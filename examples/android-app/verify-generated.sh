@@ -19,13 +19,13 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 CORE_DIR="../.."
-CORE_JAR="$(ls "$CORE_DIR"/build/libs/localaze-*.jar 2>/dev/null | grep -v -- -sources.jar | head -1 || true)"
+CORE_JAR="$(ls "$CORE_DIR"/build/libs/localaze-*.jar 2>/dev/null | grep -v -e -sources.jar -e -javadoc.jar | head -1 || true)"
 
 if [ -z "$CORE_JAR" ]; then
   echo "Building the core first..."
   (cd "$CORE_DIR" && ./gradlew --quiet jar) \
     || (cd "$CORE_DIR" && kotlinc src/main/kotlin -d build/libs/localaze-0.1.0.jar)
-  CORE_JAR="$(ls "$CORE_DIR"/build/libs/localaze-*.jar | grep -v -- -sources.jar | head -1)"
+  CORE_JAR="$(ls "$CORE_DIR"/build/libs/localaze-*.jar | grep -v -e -sources.jar -e -javadoc.jar | head -1)"
 fi
 
 OUT="$(mktemp -d)"
