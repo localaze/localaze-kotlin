@@ -1,0 +1,17 @@
+# A merged contract change reaches this repository as a pull request that moves
+# contract/ forward, opened within a day. Its CI is the check that the
+# implementation still conforms; the implementation of a new rule lands in the
+# same pull request.
+version: 2
+updates:
+  - package-ecosystem: gitsubmodule
+    directory: /
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: "contract"
+    labels: [contract]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

@@ -1,0 +1,87 @@
+# Every pull request and every push to main runs the whole suite against the
+# contract pinned at contract/. localaze-contract also calls this workflow with
+# a proposed contract commit, so a contract change shows what it would break
+# here before it merges.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      contract-ref:
+        description: A localaze-contract commit to test against instead of the pinned one
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.repository }}-${{ github.ref }}-${{ inputs.contract-ref }}
+  cancel-in-progress: true
+
+env:
+  KOTLIN_VERSION: 2.1.21
+
+jobs:
+  kotlin:
+    name: Kotlin and Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # Named explicitly: when another repository calls this workflow, a bare
+      # checkout would fetch the caller.
+      - uses: actions/checkout@v4
+        with:
+          repository: localaze/localaze-kotlin
+          ref: ${{ inputs.contract-ref && 'main' || '' }}
+          submodules: recursive
+
+      - name: Use the proposed contract
+        if: inputs.contract-ref
+        run: |
+          git -C contract fetch --depth 1 origin "${{ inputs.contract-ref }}"
+          git -C contract checkout --quiet FETCH_HEAD
+          echo "Testing against contract $(git -C contract rev-parse --short HEAD)"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Runtime, generator and golden files
+        run: ./gradlew test --console=plain
+
+      # verify-generated.sh compiles the demo's generated code with kotlinc
+      # alone, so the part that matters most is checked without Android.
+      - name: kotlinc
+        run: |
+          curl -sSLo kotlinc.zip "https://github.com/JetBrains/kotlin/releases/download/v${KOTLIN_VERSION}/kotlin-compiler-${KOTLIN_VERSION}.zip"
+          unzip -q kotlinc.zip -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/kotlinc/bin" >> "$GITHUB_PATH"
+
+      - name: The demo's generated code
+        working-directory: examples/android-app
+        run: ./verify-generated.sh
+
+      - name: Android adapters
+        working-directory: android
+        run: ../gradlew -p . assembleRelease --console=plain
+
+      - name: Compose example
+        working-directory: examples/android-app
+        run: ../../gradlew -p . assembleDebug --console=plain
+
+      - name: Test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            build/reports/tests
+            generator/build/reports/tests
