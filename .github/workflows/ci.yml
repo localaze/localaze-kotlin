@@ -56,7 +56,10 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
 
-      - name: Runtime, generator and golden files
+      - name: The README's examples
+        run: python3 contract/scripts/check-snippets.py README.md
+
+      - name: Runtime, generator, golden files and the README's accessor example
         run: ./gradlew test --console=plain
 
       # verify-generated.sh compiles the demo's generated code with kotlinc
