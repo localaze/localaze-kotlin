@@ -20,7 +20,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.repository }}-${{ github.ref }}-${{ inputs.contract-ref }}
+  # Named for this repository: in a call from localaze-contract, github.repository
+  # is the caller's, and the three SDKs would cancel one another.
+  group: ci-kotlin-${{ github.ref }}-${{ inputs.contract-ref }}
   cancel-in-progress: true
 
 env:
@@ -34,7 +36,7 @@ jobs:
     steps:
       # Named explicitly: when another repository calls this workflow, a bare
       # checkout would fetch the caller.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: localaze/localaze-kotlin
           ref: ${{ inputs.contract-ref && 'main' || '' }}
@@ -47,12 +49,12 @@ jobs:
           git -C contract checkout --quiet FETCH_HEAD
           echo "Testing against contract $(git -C contract rev-parse --short HEAD)"
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       - name: Runtime, generator and golden files
         run: ./gradlew test --console=plain
@@ -79,7 +81,7 @@ jobs:
 
       - name: Test reports
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports
           path: |
