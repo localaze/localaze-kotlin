@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            // Localaze's purple.
+            // Localaze's purple, a lighter step of the seed for a dark surface.
             MaterialTheme(colorScheme = darkColorScheme(primary = Color(0xFFB794F6))) {
                 DemoScreen(model)
             }
